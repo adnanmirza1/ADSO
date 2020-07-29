@@ -1,4 +1,4 @@
-﻿@model Adso.Models.Country
+﻿@model Adso.Models.ViewModels.CountryDetailsViewModel
 
 @{
     ViewData["Title"] = "Details";
@@ -8,41 +8,41 @@
 
 <div>
     <h4>Country</h4>
-    <hr />
+    <hr /> 
     <dl class="row">
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CountryName)
+            @Html.DisplayNameFor(model => model.Country.CountryName)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CountryName)
+            @Html.DisplayFor(model => model.Country.CountryName)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ShortName)
+            @Html.DisplayNameFor(model => model.Country.ShortName)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ShortName)
+            @Html.DisplayFor(model => model.Country.ShortName)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Currency)
+            @Html.DisplayNameFor(model => model.Country.Currency)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Currency)
+            @Html.DisplayFor(model => model.Country.Currency)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CallingCode)
+            @Html.DisplayNameFor(model => model.Country.CallingCode)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CallingCode)
+            @Html.DisplayFor(model => model.Country.CallingCode)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Status)
+            @Html.DisplayNameFor(model => model.Country.Status)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Status)
+            @Html.DisplayFor(model => model.Country.Status)
         </dd>
     </dl>
 </div>
 <div>
-    <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
+    <a asp-action="Edit" asp-route-id="@Model.Country.Id">Edit</a> |
     <a asp-action="Index">Back to List</a>
 </div>

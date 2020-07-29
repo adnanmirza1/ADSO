@@ -2,134 +2,100 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using Adso.Models;
+using Adso.Models.DbModels;
+using Adso.Models.ViewModels;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Adso.Controllers
 {
     public class CitiesController : Controller
     {
+        private readonly ICityRepository _cityRepository;
         private readonly AdsoDbContext _context;
-        
 
-        public CitiesController(AdsoDbContext context)
+        public CitiesController(ICityRepository cityRepository, AdsoDbContext context)
         {
+            _cityRepository = cityRepository;
             _context = context;
         }
-
-        // GET: Cities
-        public async Task<IActionResult> Index(string searchString)
+        public IActionResult Index(string searchString)
         {
-            var cities = from m in _context.City
-                            select m;
+            // retrieve all the countries
+            var model = _cityRepository.GetAllCities();
 
             if (!String.IsNullOrEmpty(searchString))
             {
-                cities = cities.Where(s => s.CountryName.Contains(searchString));
+                model = model.Where(s => s.CityName.Contains(searchString));
             }
 
-            return View(await cities.ToListAsync());
+            // Pass the list of countries to the view
+            return View(model);
         }
-
-        //public ActionResult Details(int Id)
-        //{
-        //    City ct = new City();
-        //    ct = _context.City.Find(Id);
-        //    return PartialView("_Details", ct);
-        //}
-
-
-        // GET: Cities/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public ViewResult Details(int? id)
         {
-            if (id == null)
+            CityDetailsViewModel cityDetailsViewModel = new CityDetailsViewModel()
             {
-                return NotFound();
-            }
+                City = _cityRepository.GetCities(id ?? 1),
+                PageTitle = "City Details"
+            };
 
-            var city = await _context.City
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (city == null)
-            {
-                return NotFound();
-            }
-
-            return View(city);
+            return View(cityDetailsViewModel);
         }
-
-        // GET: Cities/Create
-        public IActionResult Create()
+        [HttpGet]
+        public ViewResult Create()
         {
             return View();
         }
 
-        // POST: Cities/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
-        // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,CountryName,CityCode,CityNmae,Status")] City city)
+        public IActionResult Create(City city)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(city);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                City newCity = _cityRepository.Add(city);
+                return RedirectToAction("details", new { id = newCity.Id });
             }
-            return View(city);
+            return View();
         }
-
-        // GET: Cities/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        [HttpGet]
+        public ViewResult Edit(int id)
         {
-            if (id == null)
+            City city = _cityRepository.GetCities(id);
+            CityEditViewModel cityEditViewModel = new CityEditViewModel
             {
-                return NotFound();
-            }
-
-            var city = await _context.City.FindAsync(id);
-            if (city == null)
-            {
-                return NotFound();
-            }
-            return View(city);
+                Id = city.Id,
+                Country = city.Country,
+                CityName = city.CityName,
+                CityCode = city.CityCode,
+                Status = city.Status
+            };
+            return View(cityEditViewModel);
         }
-
-        // POST: Cities/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
-        // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,CountryName,CityCode,CityNmae,Status")] City city)
+        public IActionResult Edit(CityEditViewModel model)
         {
-            if (id != city.Id)
-            {
-                return NotFound();
-            }
-
+            // Check if the provided data is valid, if not rerender the edit view
+            // so the user can correct and resubmit the edit form
             if (ModelState.IsValid)
             {
-                try
-                {
-                    _context.Update(city);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!CityExists(city.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                // Retrieve the employee being edited from the database
+                City city = _cityRepository.GetCities(model.Id);
+                // Update the employee object with the data in the model object
+                city.Country = model.Country;
+                city.CityName = model.CityName;
+                city.CityCode = model.CityCode;
+                city.Status = model.Status;
+
+                // Call update method on the repository service passing it the
+                // employee object to update the data in the database table
+                City updatedCity = _cityRepository.Update(city);
+
+                return RedirectToAction("index");
             }
-            return View(city);
+
+            return View(model);
         }
 
         // GET: Cities/Delete/5
@@ -140,7 +106,7 @@ namespace Adso.Controllers
                 return NotFound();
             }
 
-            var city = await _context.City
+            var city = await _context.Cities
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (city == null)
             {
@@ -155,15 +121,11 @@ namespace Adso.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var city = await _context.City.FindAsync(id);
-            _context.City.Remove(city);
+            var city = await _context.Cities.FindAsync(id);
+            _context.Cities.Remove(city);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool CityExists(int id)
-        {
-            return _context.City.Any(e => e.Id == id);
-        }
     }
 }

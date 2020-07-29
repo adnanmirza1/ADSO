@@ -172,4 +172,3 @@ C:\Users\ALI COMPUTER CENTER\Desktop\MyProjects\Adso\Adso\obj\Debug\netcoreapp3.
 C:\Users\ALI COMPUTER CENTER\Desktop\MyProjects\Adso\Adso\obj\Debug\netcoreapp3.1\Razor\Views\Cities\Details.cshtml.g.cs
 C:\Users\ALI COMPUTER CENTER\Desktop\MyProjects\Adso\Adso\obj\Debug\netcoreapp3.1\Razor\Views\Cities\Edit.cshtml.g.cs
 C:\Users\ALI COMPUTER CENTER\Desktop\MyProjects\Adso\Adso\obj\Debug\netcoreapp3.1\Razor\Views\Cities\Index.cshtml.g.cs
-C:\Users\ALI COMPUTER CENTER\Desktop\MyProjects\Adso\Adso\obj\Debug\netcoreapp3.1\Razor\Views\Cities\Details2.cshtml.g.cs

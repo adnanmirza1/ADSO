@@ -34,9 +34,6 @@ namespace Adso.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        public string OpenPopup()
-        {
-            return "<h1> This Is Modeless Popup Window</h1>";
-        }
+        
     }
 }

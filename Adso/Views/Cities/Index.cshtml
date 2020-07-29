@@ -35,13 +35,13 @@
                             @Html.DisplayNameFor(model => model.Id)
                         </th>
                         <th>
-                            @Html.DisplayNameFor(model => model.CountryName)
+                            @Html.DisplayNameFor(model => model.Country)
                         </th>
                         <th>
                             @Html.DisplayNameFor(model => model.CityCode)
                         </th>
                         <th>
-                            @Html.DisplayNameFor(model => model.CityNmae)
+                            @Html.DisplayNameFor(model => model.CityName)
                         </th>
                         <th>
                             @Html.DisplayNameFor(model => model.Status)
@@ -57,13 +57,13 @@
                                 @Html.DisplayFor(modelItem => item.Id)
                             </td>
                             <td>
-                                @Html.DisplayFor(modelItem => item.CountryName)
+                                @Html.DisplayFor(modelItem => item.Country.Id)
                             </td>
                             <td>
                                 @Html.DisplayFor(modelItem => item.CityCode)
                             </td>
                             <td>
-                                @Html.DisplayFor(modelItem => item.CityNmae)
+                                @Html.DisplayFor(modelItem => item.CityName)
                             </td>
                             <td>
                                 <span class="badge badge-success">@Html.DisplayFor(modelItem => item.Status)</span>

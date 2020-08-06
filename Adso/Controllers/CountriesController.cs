@@ -5,107 +5,117 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Adso.Models;
-using Adso.Models.DbModels;
 using Adso.Models.ViewModels;
 
 namespace Adso.Controllers
 {
     public class CountriesController : Controller
     {
-        private readonly ICountryRepository _countryRepository;
+        
         private readonly AdsoDbContext _context;
 
-        public CountriesController(ICountryRepository countryRepository, AdsoDbContext context)
+        public CountriesController(AdsoDbContext context)
         {
-            _countryRepository = countryRepository;
+          
             _context = context;
         }
 
-        public IActionResult Index(string searchString)
+        public async Task<IActionResult> Index(string searchString)
         {
-            // retrieve all the countries
-            var model = _countryRepository.GetAllCountries();
+            var country = from m in _context.Countries
+                         select m;
 
             if (!String.IsNullOrEmpty(searchString))
             {
-                model = model.Where(s => s.CountryName.Contains(searchString));
+                country = country.Where(s => s.CountryName.Contains(searchString));
             }
 
-            // Pass the list of countries to the view
-            return View(model);
 
+            return View(await _context.Countries.ToListAsync());
         }
 
-        public ViewResult Details(int? id)
+        public async Task<IActionResult> Details(int? id)
         {
-            CountryDetailsViewModel countryDetailsViewModel = new CountryDetailsViewModel()
+            if (id == null)
             {
-                Country = _countryRepository.GetCountries(id ?? 1),
-                PageTitle = "Country Details"
-            };
+                return NotFound();
+            }
 
-            return View(countryDetailsViewModel);
+            var country = await _context.Countries
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (country == null)
+            {
+                return NotFound();
+            }
+
+            return View(country);
         }
 
-        [HttpGet]
-        public ViewResult Create()
+        public IActionResult Create()
         {
             return View();
         }
 
         [HttpPost]
-        public IActionResult Create(Country country)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("Id,CountryName,ShortName,Currency,CallingCode,Status")] Country country)
         {
             if (ModelState.IsValid)
             {
-                Country newCountry = _countryRepository.Add(country);
-                return RedirectToAction("details", new { id = newCountry.Id });
+                _context.Add(country);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
             }
-            return View();
+            return View(country);
         }
 
-        [HttpGet]
-        public ViewResult Edit(int id)
+        public async Task<IActionResult> Edit(int? id)
         {
-            Country country = _countryRepository.GetCountries(id);
-            CountryEditViewModel countryEditViewModel = new CountryEditViewModel
+            if (id == null)
             {
-                Id = country.Id,
-                CountryName = country.CountryName,
-                ShortName = country.ShortName,
-                Currency = country.Currency,
-                CallingCode = country.CallingCode,
-                Status = country.Status
-            };
-            return View(countryEditViewModel);
+                return NotFound();
+            }
+
+            var country = await _context.Countries.FindAsync(id);
+            if (country == null)
+            {
+                return NotFound();
+            }
+            return View(country);
         }
+
         [HttpPost]
-        public IActionResult Edit(CountryEditViewModel model)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("Id,CountryName,ShortName,Currency,CallingCode,Status")] Country country)
         {
-            // Check if the provided data is valid, if not rerender the edit view
-            // so the user can correct and resubmit the edit form
-            if (ModelState.IsValid)
+            if (id != country.Id)
             {
-                // Retrieve the employee being edited from the database
-                Country country = _countryRepository.GetCountries(model.Id);
-                // Update the employee object with the data in the model object
-                country.CountryName = model.CountryName;
-                country.ShortName = model.ShortName;
-                country.Currency = model.Currency;
-                country.CallingCode = model.CallingCode;
-                country.Status = model.Status;
-
-                // Call update method on the repository service passing it the
-                // employee object to update the data in the database table
-                Country updatedCountry = _countryRepository.Update(country);
-
-                return RedirectToAction("index");
+                return NotFound();
             }
 
-            return View(model);
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(country);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!CountryExists(country.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            return View(country);
         }
 
-        // GET: Countries/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -123,7 +133,6 @@ namespace Adso.Controllers
             return View(country);
         }
 
-        // POST: Countries/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -134,21 +143,12 @@ namespace Adso.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        private bool CountryExists(int id)
+        {
+            return _context.Countries.Any(e => e.Id == id);
+        }
 
 
-        //public async Task<IActionResult> IndexAsync(string searchString)
-        //{
-        //    // retrieve all the employees
-        //    var countries = from m in _context.Countries
-        //                    select m;
-        //    if (!String.IsNullOrEmpty(searchString))
-        //    {
-        //        countries = countries.Where(s => s.CountryName.Contains(searchString));
-        //    }
-
-        //    return View(await countries.ToListAsync());
-
-        //}
 
     }
 }

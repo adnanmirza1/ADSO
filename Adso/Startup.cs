@@ -10,7 +10,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Adso.Models;
 using Microsoft.EntityFrameworkCore;
-using Adso.Models.DbModels;
 
 namespace Adso
 {
@@ -30,8 +29,8 @@ namespace Adso
 
             services.AddDbContext<AdsoDbContext>(options =>
             options.UseSqlServer(Configuration.GetConnectionString("AdsoDbContext")));
-            services.AddScoped<ICountryRepository, SQLCountryRepository>();
-            services.AddScoped<ICityRepository, SQLCityRepository>();
+            //services.AddScoped<ICountryRepository, SQLCountryRepository>();
+            //services.AddScoped<ICityRepository, SQLCityRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

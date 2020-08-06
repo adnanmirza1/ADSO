@@ -1,4 +1,4 @@
-﻿using Adso.Models.DbModels;
+﻿
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -27,7 +27,7 @@ namespace Adso.Models
                 foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
             }
 
-            modelBuilder.Seed();
+            //modelBuilder.Seed();
         }
     }
 }

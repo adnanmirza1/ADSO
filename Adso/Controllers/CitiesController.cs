@@ -3,103 +3,40 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Adso.Models;
-using Adso.Models.DbModels;
 using Adso.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace Adso.Controllers
 {
     public class CitiesController : Controller
     {
-        private readonly ICityRepository _cityRepository;
+        
         private readonly AdsoDbContext _context;
 
-        public CitiesController(ICityRepository cityRepository, AdsoDbContext context)
+        public CitiesController( AdsoDbContext context)
         {
-            _cityRepository = cityRepository;
+           
             _context = context;
         }
-        public IActionResult Index(string searchString)
+        
+        public async Task<IActionResult> Index(string searchString)
         {
-            // retrieve all the countries
-            var model = _cityRepository.GetAllCities();
+            var city = from m in _context.Cities
+                          select m;
 
             if (!String.IsNullOrEmpty(searchString))
             {
-                model = model.Where(s => s.CityName.Contains(searchString));
+                city = city.Where(s => s.CityName.Contains(searchString));
             }
 
-            // Pass the list of countries to the view
-            return View(model);
-        }
-        public ViewResult Details(int? id)
-        {
-            CityDetailsViewModel cityDetailsViewModel = new CityDetailsViewModel()
-            {
-                City = _cityRepository.GetCities(id ?? 1),
-                PageTitle = "City Details"
-            };
-
-            return View(cityDetailsViewModel);
-        }
-        [HttpGet]
-        public ViewResult Create()
-        {
-            return View();
+            var AdsoDbContext = _context.Cities.Include(c => c.Country);
+            return View(await AdsoDbContext.ToListAsync());
         }
 
-        [HttpPost]
-        public IActionResult Create(City city)
-        {
-            if (ModelState.IsValid)
-            {
-                City newCity = _cityRepository.Add(city);
-                return RedirectToAction("details", new { id = newCity.Id });
-            }
-            return View();
-        }
-        [HttpGet]
-        public ViewResult Edit(int id)
-        {
-            City city = _cityRepository.GetCities(id);
-            CityEditViewModel cityEditViewModel = new CityEditViewModel
-            {
-                Id = city.Id,
-                Country = city.Country,
-                CityName = city.CityName,
-                CityCode = city.CityCode,
-                Status = city.Status
-            };
-            return View(cityEditViewModel);
-        }
-        [HttpPost]
-        public IActionResult Edit(CityEditViewModel model)
-        {
-            // Check if the provided data is valid, if not rerender the edit view
-            // so the user can correct and resubmit the edit form
-            if (ModelState.IsValid)
-            {
-                // Retrieve the employee being edited from the database
-                City city = _cityRepository.GetCities(model.Id);
-                // Update the employee object with the data in the model object
-                city.Country = model.Country;
-                city.CityName = model.CityName;
-                city.CityCode = model.CityCode;
-                city.Status = model.Status;
-
-                // Call update method on the repository service passing it the
-                // employee object to update the data in the database table
-                City updatedCity = _cityRepository.Update(city);
-
-                return RedirectToAction("index");
-            }
-
-            return View(model);
-        }
-
-        // GET: Cities/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+      
+        public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
             {
@@ -107,6 +44,7 @@ namespace Adso.Controllers
             }
 
             var city = await _context.Cities
+                .Include(c => c.Country)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (city == null)
             {
@@ -116,7 +54,93 @@ namespace Adso.Controllers
             return View(city);
         }
 
-        // POST: Cities/Delete/5
+        public IActionResult Create()
+        {
+            ViewData["CountryId"] = new SelectList(_context.Countries, "Id", "Id");
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("Id,CountryId,CityCode,CityName,Status")] City city)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Add(city);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            ViewData["CountryId"] = new SelectList(_context.Countries, "Id", "Id", city.CountryId);
+            return View(city);
+        }
+
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var city = await _context.Cities.FindAsync(id);
+            if (city == null)
+            {
+                return NotFound();
+            }
+            ViewData["CountryId"] = new SelectList(_context.Countries, "Id", "Id", city.CountryId);
+            return View(city);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("Id,CountryId,CityCode,CityName,Status")] City city)
+        {
+            if (id != city.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(city);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!CityExists(city.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            ViewData["CountryId"] = new SelectList(_context.Countries, "Id", "Id", city.CountryId);
+            return View(city);
+        }
+
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var city = await _context.Cities
+                .Include(c => c.Country)
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (city == null)
+            {
+                return NotFound();
+            }
+
+            return View(city);
+        }
+
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -125,6 +149,11 @@ namespace Adso.Controllers
             _context.Cities.Remove(city);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
+        }
+
+        private bool CityExists(int id)
+        {
+            return _context.Cities.Any(e => e.Id == id);
         }
 
     }
